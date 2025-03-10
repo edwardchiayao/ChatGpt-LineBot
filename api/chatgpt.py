@@ -2,27 +2,24 @@ from api.prompt import Prompt
 import os
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
 class ChatGPT:
-    def __init__(self, api_key, model="gpt-4"):
-        """初始化 ChatGPT 物件"""
-        self.api_key = api_key
-        self.model = model
-
-    def ask(self, prompt):
-        """向 ChatGPT 發送請求並獲取回應"""
-        response = openai.ChatCompletion.create(
+    def __init__(self):
+        self.prompt = Prompt()
+        self.model = "chatbot"
+        self.temperature = float(os.getenv("OPENAI_TEMPERATURE", default = 0))
+        self.frequency_penalty = float(os.getenv("OPENAI_FREQUENCY_PENALTY", default = 0))
+        self.presence_penalty = float(os.getenv("OPENAI_PRESENCE_PENALTY", default = 0.6))
+        self.max_tokens = int(os.getenv("OPENAI_MAX_TOKENS", default = 240))
+    def get_response(self):
+        response = openai.Completion.create(
             model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            api_key=self.api_key
+            prompt=self.prompt.generate_prompt(),
+            temperature=self.temperature,
+            frequency_penalty=self.frequency_penalty,
+            presence_penalty=self.presence_penalty,
+            max_tokens=self.max_tokens
         )
-        return response["choices"][0]["message"]["content"].strip()
-
-# 測試
-if __name__ == "__main__":
-    API_KEY = "your_openai_api_key"
-    chatbot = ChatGPT(API_KEY)
-    
-    question = "請問你是誰？"
-    answer = chatbot.ask(question)
-    
-    print("ChatGPT 回應：", answer)
+        return response['choices'][0]['text'].strip()
+    def add_msg(self, text):
+        self.prompt.add_msg(text)
